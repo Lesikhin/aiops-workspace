@@ -36,32 +36,33 @@ flowchart TB
     
     subgraph MCP_Layer["MCP Server (stdio)"]
         direction LR
-        T1["get_system_status<br/>(mock_data.py)"]
+        T1["get_system_status"]
         T2["search_knowledge_base"]
         T3["reindex_knowledge_base"]
     end
     
     subgraph Storage_Layer["Storage Layer"]
         direction LR
-        Qdrant["Qdrant<br/>(Docker :6333)<br/>knowledge_base"]
-        Emb["Ollama Embeddings<br/>nomic-embed-text<br/>768 dim, cosine"]
+        Qdrant["Qdrant<br/>(Docker :6333)"]
+        Emb["Ollama Embeddings<br/>nomic-embed-text"]
     end
     
     User -->|"запрос"| LLM
     SP -.->|"guardrails"| LLM
     LLM -->|"tool-calling"| MCP_Layer
     T2 -->|"векторный поиск"| Qdrant
-    T2 -->|"эмбеддинг запроса"| Emb
+    T2 -->|"эмбеддинг"| Emb
     
-    style User fill:#3b82f6,stroke:#1e40af,color:#fff
-    style LLM fill:#f59e0b,stroke:#b45309,color:#fff
-    style SP fill:#fbbf24,stroke:#b45309,color:#000
-    style T1 fill:#10b981,stroke:#047857,color:#fff
-    style T2 fill:#10b981,stroke:#047857,color:#fff
-    style T3 fill:#10b981,stroke:#047857,color:#fff
-    style Qdrant fill:#dc2626,stroke:#991b1b,color:#fff
-    style Emb fill:#7c3aed,stroke:#5b21b6,color:#fff
-
+    %% Определение стилей (безопасный синтаксис для GitHub)
+    classDef userClass fill:#3b82f6,stroke:#1e40af,color:#ffffff
+    classDef llmClass fill:#f59e0b,stroke:#b45309,color:#ffffff
+    classDef mcpClass fill:#10b981,stroke:#047857,color:#ffffff
+    classDef storageClass fill:#dc2626,stroke:#991b1b,color:#ffffff
+    
+    class User userClass
+    class LLM,SP llmClass
+    class T1,T2,T3 mcpClass
+    class Qdrant,Emb storageClass
 
 ## 3. Ключевое инженерное решение: борьба с галлюцинациями
 
