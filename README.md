@@ -63,6 +63,7 @@ flowchart TB
     class LLM,SP llmClass
     class T1,T2,T3 mcpClass
     class Qdrant,Emb storageClass
+```
 
 ## 3. Ключевое инженерное решение: борьба с галлюцинациями
 
