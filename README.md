@@ -24,33 +24,44 @@
 **Измеримый результат**: Тестирование показало снижение галлюцинаций в метриках с ~40% (базовая llama3.1:8b) до 0% (qwen2.5:7b) при сохранении 100% точности tool-calling.
 
 ## 2. Архитектура
-+-----------------------------------------------------------------+
-| Пользователь                                                    |
-| (Open WebUI / CLI-клиент / MCP Inspector)                       |
-+-----------------------------------------------------------------+
-                              |
-                              v
-+-----------------------------------------------------------------+
-| LLM (Ollama, qwen2.5:7b)                                        | 
-| + System Prompt с guardrails (FR-3.1..FR-3.3)                   |
-+-----------------------------------------------------------------+
-                              | 
-                              v
-+-----------------------------------------------------------------+
-| MCP-сервер (stdio-транспорт)                                    |
-| +------------------+ +------------------+ +-------------------+ |
-| | get_system_status| | search_knowledge | | reindex_kb        | |
-| | (mock_data.py)   | | _base            | |                   | |
-| +------------------+ +--------+---------+ +-----------------+ | |
-+-----------------------------------------------------------------+
-                                |
-                  +-------------+-------------+
-                  v                           v
-+-----------------------+       +-----------------------+
-| Qdrant (Docker)       |       | Ollama Embeddings     |
-| localhost:6333        |       | nomic-embed-text      |
-| knowledge_base        |       | (768 dim, cosine)     |
-+-----------------------+       +-----------------------+
+
+```mermaid
+flowchart TB
+    User["Пользователь<br/>(Open WebUI / CLI / MCP Inspector)"]
+    
+    subgraph LLM_Layer["LLM Layer"]
+        LLM["Ollama<br/>qwen2.5:7b"]
+        SP["System Prompt<br/>с guardrails"]
+    end
+    
+    subgraph MCP_Layer["MCP Server (stdio)"]
+        direction LR
+        T1["get_system_status<br/>(mock_data.py)"]
+        T2["search_knowledge_base"]
+        T3["reindex_knowledge_base"]
+    end
+    
+    subgraph Storage_Layer["Storage Layer"]
+        direction LR
+        Qdrant["Qdrant<br/>(Docker :6333)<br/>knowledge_base"]
+        Emb["Ollama Embeddings<br/>nomic-embed-text<br/>768 dim, cosine"]
+    end
+    
+    User -->|"запрос"| LLM
+    SP -.->|"guardrails"| LLM
+    LLM -->|"tool-calling"| MCP_Layer
+    T2 -->|"векторный поиск"| Qdrant
+    T2 -->|"эмбеддинг запроса"| Emb
+    
+    style User fill:#3b82f6,stroke:#1e40af,color:#fff
+    style LLM fill:#f59e0b,stroke:#b45309,color:#fff
+    style SP fill:#fbbf24,stroke:#b45309,color:#000
+    style T1 fill:#10b981,stroke:#047857,color:#fff
+    style T2 fill:#10b981,stroke:#047857,color:#fff
+    style T3 fill:#10b981,stroke:#047857,color:#fff
+    style Qdrant fill:#dc2626,stroke:#991b1b,color:#fff
+    style Emb fill:#7c3aed,stroke:#5b21b6,color:#fff
+
 
 ## 3. Ключевое инженерное решение: борьба с галлюцинациями
 
